@@ -18,6 +18,7 @@ validation to be displayed.
 
 ### Template Code
 
+<img width="590" alt="Screen Shot 2019-11-20 at 5 15 29 PM" src="https://user-images.githubusercontent.com/50254090/69311932-6dbf7600-0be2-11ea-87e3-101ce7e3063d.png">
 
 
 We can call this template in the test case by using the format [Template] Data Driven Test
