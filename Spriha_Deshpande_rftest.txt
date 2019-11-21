@@ -1,0 +1,102 @@
+*** Settings ***
+Library           Selenium2Library
+Library           Collections
+Test Setup        Open Browser    http://acme-gizmo.us/changepwd.php    chrome
+Test Template     Data Driven Test Cases
+Test Teardown     Close Browser
+
+*** Variables ***
+# selector for error/success validation displayed on the system
+${IsElementVisible}    //html/body/div[2]
+# Declaring a list to store all the data to be tested
+${Save Password}      //input[@name="submit"]
+# Declaring current password input text field and it's xpath
+${Current Password}   //input[@name="cur_password"]
+# Declaring New password input text field and it's xpath
+${New Password}       //input[@name="new_password"]
+# Declaring Confirm password input text field and it's xpath
+${Confirm Password}   //input[@name="confirm_password"]
+
+*** Test Cases ***
+Scenario: Testing Change Password Page
+    #   TC:1 Positive Testing: All Valid Credentials
+    TC01    Earth15     Earth20   Earth20   Password changed: 'Earth20'
+    #   TC:2 Positive Testing: Valid New and Confirm password of character length 5
+    TC02    Earth15     eArt5   eArt5   Password changed: 'eArt5'
+    #   TC:3 Positive Testing: New/Confirm password with one special character
+    TC03    Earth15     Earth@15   Earth@15   Password changed: 'Earth@15'
+    #   TC:4 Positive Testing: New/Confirm password Starting with special character
+    TC04    Earth15     @Earth15   @Earth15   Password changed: '@Earth15'
+    #   TC:5 Positive Testing: New/Confirm password with space
+    TC05    Earth15     Earth 20   Earth 20   Password changed: 'Earth 20'
+    #   TC:6 Positive Testing: Invalid Old Password (Less than 4 characters)
+    TC06    123     Earth20   Earth20   Error: incorrect current password
+    #   TC:7 Negative Testing: Long Old Password (More than 8 Characters)
+    TC07    Password12345678901     Earth20   Earth20   Error: incorrect current password
+    #   TC:8 Negative Testing: New/Confirm password with two capital letters and 1 number
+    TC08    Earth15     EE1   EE1   Error: new password must have 4-8 characters
+    #   TC:9 Negative Testing: Invalid New Password (Less than 4 characters)
+    TC09    Earth15     abc   abc20   Error: confirmed password does not match new password
+    #   TC:10 Negative Testing: New password with just 1 digit and 1 letter (Less than 4 characters)
+    TC10    Earth15     1A   1A   Error: new password must have 4-8 characters
+    #   TC:11 Negative Testing: Old, new and confirm password are all the same
+    TC11    Earth15     Earth15   Earth15   Error: new password cannot be the same as old one
+    #   TC:12 Negative Testing: Different New/Confirm Password
+    TC12    Earth15     Earth20   Earth78   Error: confirmed password does not match new password
+    #   TC:13 Negative Testing: New/Confirm Password with only numbers
+    TC13    Earth15     12345   12345   Error: new password must contain at least one capital letter
+    #   TC:14 Negative Testing: Invalid New/Confirm password (Less than 4 characters)
+    TC14    Earth15     ear   ear   Error: new password must contain at least one number
+    #   TC:15 Negative Testing: Invalid confirm password and Valid New password (More than 8 characters)
+    TC15    Earth15     Earth20   Password123   Error: confirmed password does not match new password
+    #   TC:16 Negative Testing: New/Confirm password does not meet requirement(No capitals)
+    TC16    Earth15     Earth20   Password123   Error: confirmed password does not match new password
+    #   TC:17 Negative Testing: New/Confirm password does not meet requirement(No capitals and less than 4 characters)
+    TC17    Earth15     h20   h20   Error: new password must contain at least one capital letter
+    #   TC:18 Negative Testing: Confirm password is blank
+    TC18    Earth15   Earth20  ${EMPTY}   Error: Enter confirm password
+    #   TC:19 Negative Testing: Old/New/Confirm password (All fields) Blank
+    TC19    ${EMPTY}    ${EMPTY}    ${EMPTY}   Error: Enter current password
+    #   TC:20 Negative Testing: Old password without capitals
+    TC20    earth15     Earth20   Earth20   Error: incorrect current password
+    #   TC:21 Negative Testing: Blank Old Password
+    TC21    ${EMPTY}   Earth20   Earth20   Error: Enter current password
+    #   TC:22 Negative Testing: Blank New/Old Password
+    TC22    Earth15     ${EMPTY}   ${EMPTY}   Error: Enter new password
+    #   TC:23 Negative Testing: Blank New Password
+    TC23    Earth15   ${EMPTY}   Earth20   Error: Enter new password
+    #   TC:24 Negative Testing:  Long New/confirm Password (More than 8 Characters)
+    TC24    Earth15     Password123   Password123   Error: incorrect new password
+    #   TC:25 Negative Testing: Old password with only letters and with capital
+    TC25    Earth     Earth15   Earth15   Error: incorrect current password
+    #   TC:26 Negative Testing: Old password starting with Earth15 and continuation of unknown string
+    TC26    Earth15 is amazing     Earth20   Earth20   Error: incorrect current password
+    #   TC:27 Negative Testing: And new password really long and with no capital
+    TC27    Earth15     earthisamazinginthisyear2019   earthisamazinginthisyear2019   Error: incorrect new password
+    #   TC:28 Negative Testing: Add new password with no convert to number
+    TC28    Earth15     earth   earth   Error: incorrect new password
+    #   TC:29 Negative Test Case: New password and confirm password below password length requirement and no characters.
+    TC29    Earth15     @@   @@   Error: new password must contain at least one number
+    #   TC:30 New password and confirm password different with only cases
+    TC30    Earth15     Earth25   earth25   Error: confirmed password does not match new password
+    #   TC:31 New password and confirm password different with no number
+    TC31    Earth15     Earth   Earth   Error: new password must contain at least one number
+
+
+*** Keywords ***
+Data Driven Test Cases
+    [Arguments]  ${test_case_number}  ${old_password_input}  ${new_password_input}  ${confirm_password_input}  ${validation_expected}
+    #   Populate the current password input field
+    Input Text    ${Current Password}    ${old_password_input}
+    #   Populate the new password input field
+    Input Text    ${New Password}     ${new_password_input}
+    #   Populate the confirm password input field
+    Input Text   ${Confirm Password}    ${confirm_password_input}
+    #   Click on Save Password button
+    Click Button    ${Save Password}
+    #   Store the validation displayed on the locator ${IsElementVisible}
+    ${validation_displayed}   get text  ${IsElementVisible}
+    #   Log Test case number  
+    Log to Console    ${test_case_number}
+    #   Validation displayed must be the same as validation expected
+    Should Be Equal As Strings    ${validation_displayed}    ${validation_expected}
